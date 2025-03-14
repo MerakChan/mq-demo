@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>订单详情</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>订单详情</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">订单信息</h5>
+                <p class="card-text">
+                    订单号：<span th:text="${order.orderNo}"></span><br>
+                    商品名称：<span th:text="${order.productName}"></span><br>
+                    购买数量：<span th:text="${order.productQuantity}"></span><br>
+                    订单金额：<span th:text="${order.totalAmount}"></span>元<br>
+                    订单状态：<span th:text="${order.status == 0 ? '待支付' : 
+                                            order.status == 1 ? '已支付' :
+                                            order.status == 2 ? '已取消' : '已完成'}"></span><br>
+                    创建时间：<span th:text="${#temporals.format(order.createTime, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                </p>
+                
+                <!-- 待支付状态显示支付按钮 -->
+                <div th:if="${order.status == 0}">
+                    <hr>
+                    <form id="payForm" class="mb-3">
+                        <input type="hidden" id="orderNo" th:value="${order.orderNo}">
+                        <input type="hidden" id="amount" th:value="${order.totalAmount}">
+                        <button type="button" class="btn btn-primary" onclick="payOrder()">立即支付</button>
+                    </form>
+                </div>
+                
+                <!-- 已支付状态显示物流信息 -->
+                <div th:if="${order.status == 1 && logistics != null}">
+                    <hr>
+                    <h5 class="card-title">物流信息</h5>
+                    <p class="card-text">
+                        物流单号：<span th:text="${logistics.logisticsNo}"></span><br>
+                        物流状态：<span th:text="${logistics.status == 0 ? '待发货' :
+                                                logistics.status == 1 ? '已发货' : '已签收'}"></span><br>
+                        收货地址：<span th:text="${logistics.address}"></span><br>
+                        收货人：<span th:text="${logistics.receiver}"></span><br>
+                        联系电话：<span th:text="${logistics.phone}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        function payOrder() {
+            var orderNo = $('#orderNo').val();
+            var amount = $('#amount').val();
+            
+            $.ajax({
+                url: '/orders/' + orderNo + '/pay',
+                method: 'POST',
+                data: {
+                    amount: amount
+                },
+                success: function(response) {
+                    alert(response);
+                    if(response === '支付成功') {
+                        window.location.reload();
+                    }
+                },
+                error: function() {
+                    alert('支付失败，请重试');
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>我的订单</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>我的订单</h2>
+        <div class="list-group">
+            <a th:each="order : ${orders}" 
+               th:href="@{/orders/{orderNo}(orderNo=${order.orderNo})}"
+               class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1" th:text="${order.productName}">商品名称</h5>
+                    <small th:text="${#temporals.format(order.createTime, 'yyyy-MM-dd HH:mm:ss')}">创建时间</small>
+                </div>
+                <p class="mb-1">
+                    订单号：<span th:text="${order.orderNo}"></span><br>
+                    数量：<span th:text="${order.productQuantity}"></span>
+                    金额：<span th:text="${order.totalAmount}"></span>元
+                </p>
+                <small th:text="${order.status == 0 ? '待支付' : 
+                                order.status == 1 ? '已支付' :
+                                order.status == 2 ? '已取消' : '已完成'}">订单状态</small>
+            </a>
+        </div>
+    </div>
+</body>
+</html> 

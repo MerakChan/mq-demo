@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>创建订单</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>创建订单</h2>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title" th:text="${product.name}">商品名称</h5>
+                <p class="card-text">
+                    单价：<span th:text="${product.price}">0.00</span>元<br>
+                    库存：<span th:text="${product.stock}">0</span>件
+                </p>
+                <form th:action="@{/orders/create}" method="post">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">购买数量</label>
+                        <input type="number" class="form-control" id="quantity" 
+                               name="quantity" min="1" th:max="${product.stock}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交订单</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

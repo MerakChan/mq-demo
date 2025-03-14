@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.merak.mqdemo.mapper.ProductMapper">
+    <select id="selectById" resultType="Product">
+        SELECT * FROM product WHERE id = #{id}
+    </select>
+    
+    <select id="selectAll" resultType="Product">
+        SELECT * FROM product
+    </select>
+    
+    <insert id="insert" parameterType="Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (name, price, stock, version, create_time, update_time)
+        VALUES (#{name}, #{price}, #{stock}, 0, NOW(), NOW())
+    </insert>
+    
+    <update id="updateStock">
+        UPDATE product 
+        SET stock = #{stock}, version = version + 1
+        WHERE id = #{id} AND version = #{version}
+    </update>
+</mapper> 
