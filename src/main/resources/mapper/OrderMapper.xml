@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.merak.mqdemo.mapper.OrderMapper">
-    <select id="selectById" resultType="Order">
+    <select id="selectById" resultType="com.merak.mqdemo.entity.Order">
         SELECT * FROM `order` WHERE id = #{id}
     </select>
     
-    <select id="selectByOrderNo" resultType="Order">
+    <select id="selectByOrderNo" resultType="com.merak.mqdemo.entity.Order">
         SELECT * FROM `order` WHERE order_no = #{orderNo}
     </select>
     
-    <select id="selectByUserId" resultType="Order">
+    <select id="selectByUserId" resultType="com.merak.mqdemo.entity.Order">
         SELECT * FROM `order` WHERE user_id = #{userId}
     </select>
     
-    <insert id="insert" parameterType="Order" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.merak.mqdemo.entity.Order" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO `order` (order_no, user_id, product_id, product_name, product_quantity, 
                            product_price, total_amount, status, create_time, update_time)
         VALUES (#{orderNo}, #{userId}, #{productId}, #{productName}, #{productQuantity}, 

@@ -4,11 +4,11 @@ import com.merak.mqdemo.config.RabbitMQConfig;
 import com.merak.mqdemo.entity.Order;
 import com.merak.mqdemo.entity.Product;
 import com.merak.mqdemo.mapper.OrderMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,28 +17,30 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 订单
+ */
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-    @Autowired
-    private OrderMapper orderMapper;
 
-    @Autowired
-    private ProductService productService;
+    private final OrderMapper orderMapper;
 
-    @Autowired
-    private LogisticsService logisticsService;
+    private final ProductCacheService productCacheService;
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private final LogisticsService logisticsService;
+
+    private final ProductService productService;
+    private final RabbitTemplate rabbitTemplate;
 
     /**
-     * 创建订单
+     * 创建订单--传入用户id，商品id和商品数量
      */
     @Transactional
     public Order createOrder(Long userId, Long productId, Integer quantity) {
-        // 查询商品信息
-        Product product = productService.getProductById(productId);
+        // 查询商品信息，优先从缓存获取
+        Product product = productCacheService.getProductById(productId);
         if (product == null || product.getStock() < quantity) {
             return null;
         }
@@ -73,7 +75,6 @@ public class OrderService {
         if (order == null || order.getStatus() != Order.STATUS_UNPAID) {
             return false;
         }
-
         // 验证支付金额
         if (order.getTotalAmount().compareTo(amount) != 0) {
             return false;
@@ -83,6 +84,12 @@ public class OrderService {
         boolean decreaseResult = productService.decreaseStock(order.getProductId(), order.getProductQuantity());
         if (!decreaseResult) {
             return false;
+        }
+        
+        // 更新商品缓存
+        Product updatedProduct = productService.getProductById(order.getProductId());
+        if (updatedProduct != null) {
+            productCacheService.updateProductCache(updatedProduct);
         }
 
         // 更新订单状态
@@ -98,14 +105,14 @@ public class OrderService {
      * 取消订单
      */
     @Transactional
-    public boolean cancelOrder(String orderNo) {
+    public void cancelOrder(String orderNo) {
         Order order = orderMapper.selectByOrderNo(orderNo);
         if (order == null || order.getStatus() != Order.STATUS_UNPAID) {
-            return false;
+            return;
         }
 
         // 更新订单状态
-        return orderMapper.updateStatus(order.getId(), Order.STATUS_CANCELED, null) > 0;
+        orderMapper.updateStatus(order.getId(), Order.STATUS_CANCELED, null);
     }
 
     /**
@@ -149,4 +156,4 @@ public class OrderService {
                 messagePostProcessor
         );
     }
-} 
+}

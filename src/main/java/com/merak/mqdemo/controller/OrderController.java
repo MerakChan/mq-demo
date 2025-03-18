@@ -5,7 +5,9 @@ import com.merak.mqdemo.entity.Order;
 import com.merak.mqdemo.entity.Product;
 import com.merak.mqdemo.service.LogisticsService;
 import com.merak.mqdemo.service.OrderService;
+import com.merak.mqdemo.service.ProductCacheService;
 import com.merak.mqdemo.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,25 +15,22 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
+//订单页面
 @Controller
 @RequestMapping("/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private LogisticsService logisticsService;
+    private final OrderService orderService;
+    private final ProductCacheService productCacheService;
+    private final LogisticsService logisticsService;
 
     /**
      * 创建订单页面
      */
     @GetMapping("/create")
     public String createOrderPage(@RequestParam Long productId, Model model) {
-        Product product = productService.getProductById(productId);
+        Product product = productCacheService.getProductById(productId);
         model.addAttribute("product", product);
         return "order/create";
     }
@@ -44,7 +43,7 @@ public class OrderController {
                             @RequestParam Integer quantity,
                             Model model) {
         // 模拟用户ID
-        Long userId = 1L;
+        Long userId = 1L; //实际应用中，用户ID通常从当前登录用户的会话中获取。
         Order order = orderService.createOrder(userId, productId, quantity);
         
         if (order != null) {
@@ -53,28 +52,6 @@ public class OrderController {
             model.addAttribute("error", "创建订单失败，库存不足");
             return "redirect:/products";
         }
-    }
-
-    /**
-     * 订单详情页面
-     */
-    @GetMapping("/{orderNo}")
-    public String orderDetail(@PathVariable String orderNo, Model model) {
-        Order order = orderService.getOrderByOrderNo(orderNo);
-        if (order == null) {
-            return "redirect:/products";
-        }
-
-        Product product = productService.getProductById(order.getProductId());
-        Logistics logistics = null;
-        if (order.getStatus() == Order.STATUS_PAID) {
-            logistics = logisticsService.getLogisticsByOrderId(order.getId());
-        }
-
-        model.addAttribute("order", order);
-        model.addAttribute("product", product);
-        model.addAttribute("logistics", logistics);
-        return "order/detail";
     }
 
     /**
@@ -88,8 +65,9 @@ public class OrderController {
         return success ? "支付成功" : "支付失败";
     }
 
+
     /**
-     * 我的订单列表
+     * 订单列表
      */
     @GetMapping("/my")
     public String myOrders(Model model) {
@@ -98,4 +76,27 @@ public class OrderController {
         model.addAttribute("orders", orderService.getOrdersByUserId(userId));
         return "order/list";
     }
-} 
+
+    /**
+     * 订单详情页面
+     */
+    @GetMapping("/{orderNo}")
+    public String orderDetail(@PathVariable String orderNo, Model model) {
+        Order order = orderService.getOrderByOrderNo(orderNo);
+        if (order == null) {
+            return "redirect:/products";
+        }
+
+        Product product = productCacheService.getProductById(order.getProductId());
+        Logistics logistics = null;
+        if (order.getStatus() == Order.STATUS_PAID) {
+            logistics = logisticsService.getLogisticsByOrderId(order.getId());
+        }
+
+        model.addAttribute("order", order);
+        model.addAttribute("product", product);
+        model.addAttribute("logistics", logistics);
+        return "order/detail";
+    }
+
+}
